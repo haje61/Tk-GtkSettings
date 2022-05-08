@@ -2,5 +2,6 @@ Changes
 Makefile.PL
 MANIFEST
 README
-t/Tk-Gtk.t
-lib/Tk/Gtk.pm
+t/Tk-GtkSettings.t
+lib/Tk/GtkSettings.pm
+

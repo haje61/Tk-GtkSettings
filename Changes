@@ -1,6 +1,6 @@
-Revision history for Perl extension Tk::Gtk.
+Revision history for Perl extension Tk::GtkSettings.
 
 0.01  Sun Feb  6 18:10:57 2022
 	- original version; created by h2xs 1.23 with options
-		-X Tk::Gtk
+		-X Tk::GtkSettings
 
