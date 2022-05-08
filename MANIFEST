@@ -1,0 +1,6 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+t/Tk-Gtk.t
+lib/Tk/Gtk.pm
