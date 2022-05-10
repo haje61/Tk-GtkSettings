@@ -1,27 +1,49 @@
-package Tk::GtkSettings.pm;
+package Tk::GtkSettings;
 
 use strict;
 use warnings;
+our $VERSION = '0.01';
 
 use Exporter;
 our @ISA = qw(Exporter);
-use Tk;
+our %EXPORT_TAGS = ( 'all' => [ qw(
+	$delete_output
+	$gtkpath
+	$verbose
+	$out_file
+	alterColor
+	applyGtkSettings
+	convertColorCode
+	groupAdd
+	groupAll
+	groupDelete
+	groupExists
+	groupMembers
+	groupMembersAdd
+	groupMembersReplace
+	groupOption
+	groupOptionAll
+	groupOptionDelete
+	gtkKey
+	gtkKeyAll
+	gtkKeyDelete
+	hex2rgb
+	hexstring
+	initDefaults
+	loadGtkInfo
+	merge2Xdefaults
+	rgb2hex
+) ] );
+our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} });
 
+our $delete_output = 1;
+our $gtkpath = $ENV{HOME} . "/.config/gtk-3.0/";
+our $verbose = 0;
+our $out_file = $ENV{HOME} . "/.tkgtk";
 
-our @EXPORT_OK = qw(
-	%gtkcolors
-	%gtksettings
-	LoadGtkInfo
-);
-
-our @EXPORT = qw(
-);
-
-our $VERSION = '0.01';
-
-my $gtkpath = $ENV{HOME} . "/.config/gtk-3.0/";
-
-our %gtksettings = ();
+my $no_gtk = 0;
+my %gtksettings = ();
+my %groups = (main => [[''], {}]);
 
 my @contentwidgets = qw(
 	CodeText
@@ -36,6 +58,7 @@ my @contentwidgets = qw(
 );
 
 my @listwidgets = qw(
+	Dirlist
 	DirTree
 	HList
 	IconList
@@ -44,7 +67,7 @@ my @listwidgets = qw(
 	Tree
 );
 
-my %namecollection = qw(
+my %mainoptions = qw(
 	background           theme_bg_color
 	foreground           theme_fg_color
 	font                 gtk-font-name
@@ -60,44 +83,61 @@ my %namecollection = qw(
 	troughColor          tk-through-color
 );
 
-my %contentcollection = qw(
+my %contentoptions = qw(
 	background           content_view_bg
 	highlightColor			theme_bg_color
 );
 
-my %listcollection = qw(
+my %listoptions = qw(
 	background           content_view_bg
 	highlightColor			theme_bg_color
 );
 
-my $file = $ENV{HOME} . "/.tkgtk";
 
-sub CollectGtkSettings {
-# 	if (-e $file) {
-# 		system "xrdb -remove $file"
-# 	}
-	if (open(OFILE, ">", $file)) {
-		for (keys %namecollection) {
-			print OFILE '*' . $_ . ": ", $gtksettings{$namecollection{$_}}, "\n";
+
+sub alterColor {
+	my ($hex, $offset) = @_;
+	my @rgb = hex2rgb($hex);
+	my @rgba = ();
+	for (@rgb) {
+		if ($_ < 128) {
+			my $c = $_ + $offset;
+			$c = 0 if $c < 0;
+			push @rgba, $c
+		} else {
+			my $c = $_ - $offset;
+			$c = 255 if $c > 255;
+			push @rgba, $c
 		}
-		for (@contentwidgets) {
-			my $cw = $_;
-			for (keys %contentcollection) {
-				print OFILE "*$cw." . $_ . ": ", $gtksettings{$contentcollection{$_}}, "\n";
-			}
-		}
-		for (@listwidgets) {
-			my $cw = $_;
-			for (keys %listcollection) {
-				print OFILE "*$cw." . $_ . ": ", $gtksettings{$listcollection{$_}}, "\n";
+	}
+	return rgb2hex(@rgba)
+}
+
+sub applyGtkSettings {
+	return if $no_gtk;
+	if (open(OFILE, ">", $out_file)) {
+		for (keys %groups) {
+			my $group = $groups{$_};
+			my $options = $group->[1];
+			my $mem = $group->[0];
+			for (@$mem) {
+				my $member = $_;
+				for (keys %$options) {
+					unless ($member eq '') {
+						print OFILE "*$member." . $_ . ": ", gtkKey($options->{$_}), "\n";
+					} else {
+						print OFILE '*' . $_ . ": ", gtkKey($options->{$_}), "\n";
+					}
+				}
 			}
 		}
 		close OFILE;
-		system "xrdb $file"
+		system "xrdb $out_file";
+		unlink $out_file if $delete_output;
 	}
 }
 
-sub ConvertColorCode {
+sub convertColorCode {
 	my $input = shift;
 	if ($input =~ /rgb\((\d+),(\d+),(\d+)\)/) {
 		my $r = substr(sprintf("0x%X", $1), 2);
@@ -107,37 +147,154 @@ sub ConvertColorCode {
 	}
 }
 
-sub LoadGtkInfo {
-	my $cf = $gtkpath . "colors.css";
-	if (open(OFILE, "<", $cf)) {
-		print "colors.css open\n";
-		while (<OFILE>) {
-			my $line = $_;
-			if ($line =~ s/\@define-color\s//) {
-				if ($line =~ /([^\s]+)\s([^;]+);/) {
-					my $key = $1;
-					my $color = $2;
-					$color = ConvertColorCode($color) if $color =~ /^rgb\(/;
-					$gtksettings{$key} = $color
-				}
-			}
-		}
-		close OFILE
-	} else {
-		warn "cannot open Gtk colors.css"
+sub groupAdd {
+	my ($group, $members, $options) = @_;
+	unless (defined $group) {
+		warn "group is not defined" if $verbose;
+		return
 	}
-	my $sf = $gtkpath . "settings.ini";
-	if (open(OFILE, "<", $sf)) {
-		while (<OFILE>) {
-			my $line = $_;
-			if ($line =~ /([^=]+)=([^\n]+)/) {
-				$gtksettings{$1} = $2
-			}
-		}
-		close OFILE
+	$members = [] unless defined $members;
+	$options = {} unless defined $options;
+	unless (exists $groups{$group}) {
+		$groups{$group} = [$members, $options]
 	} else {
-		warn "cannot open Gtk settings.ini"
+		warn "group $group already exists" if $verbose
 	}
+}
+
+sub groupAll {
+	return keys %groups
+}
+
+sub groupDelete {
+	my $group = shift;
+	if (groupExists($group)) {
+		if ($group eq 'main') {
+			warn "deleting main group is not allowed" if $verbose;
+			return 0
+		}
+		delete $groups{$group};
+	}
+	return 1
+}
+
+sub groupExists {
+	my $group = shift;
+	unless (defined $group) {
+		warn "group not specified or is not defined" if $verbose;
+		return 0
+	}
+	unless (exists $groups{$group}) {
+		warn "group $group does not exist" if $verbose;
+		return 0
+	}
+	return 1
+}
+
+sub groupMembers {
+	my $group = shift;
+	if (groupExists($group)) {
+		if ($group eq 'main') {
+			warn "no access to main group members";
+			return
+		}
+		my $l = $groups{$group}->[0];
+		return @$l;
+	}
+}
+
+sub groupMembersAdd {
+	my $group = shift;
+	if (groupExists($group)) {
+		if ($group eq 'main') {
+			warn "no access to main group members";
+			return
+		}
+		my $l = $groups{$group}->[0];
+		push @$l, @_;
+	}
+}
+
+sub groupMembersReplace {
+	my $group = shift;
+	if (groupExists($group)) {
+		if ($group eq 'main') {
+			warn "no access to main group members";
+			return
+		}
+		my $l = $groups{$group}->[0];
+		@$l = @_;
+	}
+}
+
+sub groupOptionAll {
+	my $group = shift;
+	if (groupExists($group)) {
+		my $opt = $groups{$group}->[1];
+		return keys %$opt
+	}
+}
+
+sub groupOption{
+	my $group = shift;
+	if (groupExists($group)) {
+		my $option = shift;
+		unless (defined $option) { 
+			warn "option not defined or specified" if $verbose;
+			return
+		}
+		if (@_) {
+			my $value = shift;
+			$groups{$group}->[1]->{$option} = $value;
+		}
+		return $groups{$group}->[1]->{$option}
+	}
+}
+
+sub groupOptionDelete {
+	my $group = shift;
+	if (groupExists($group)) {
+		my $option = shift;
+		unless (defined $option) { 
+			warn "option not defined or specified" if $verbose;
+			return
+		}
+		delete $groups{$group}->[1]->{$option};
+	}
+}
+
+sub gtkKey {
+	my ($key, $val) = @_;
+	return undef if $no_gtk;
+	$gtksettings{$key} = $val if defined $val;
+	if (exists $gtksettings{$key}) {
+		return $gtksettings{$key}
+	} else {
+		warn "item $key not present in gtk settings" if $verbose;
+	}
+	return undef
+}
+
+sub gtkKeyAll {
+	return 0 if $no_gtk;
+	return keys %gtksettings
+}
+
+sub gtkKeyDelete {
+	my $key = shift;
+	return 0 if $no_gtk;
+	if (exists $gtksettings{$key}) {
+		delete $gtksettings{$key}
+	} else {
+		warn "item $key not present in gtk settings" if $verbose;
+	} 
+}
+
+sub initDefaults {
+	gtkKey('tk-active-background', alterColor(gtkKey('theme_bg_color'), 20));
+	gtkKey('tk-through-color', alterColor(gtkKey('theme_bg_color'), 20));
+	groupAdd('content', \@contentwidgets, \%contentoptions);
+	groupAdd('list', \@listwidgets, \%listoptions);
 }
 
 sub hex2rgb {
@@ -159,6 +316,54 @@ sub hexstring {
 	return $hex
 }
 
+sub loadGtkInfo {
+	my $cf = $gtkpath . "colors.css";
+	if (open(OFILE, "<", $cf)) {
+		while (<OFILE>) {
+			my $line = $_;
+			if ($line =~ s/\@define-color\s//) {
+				if ($line =~ /([^\s]+)\s([^;]+);/) {
+					my $key = $1;
+					my $color = $2;
+					$color = convertColorCode($color) if $color =~ /^rgb\(/;
+					$gtksettings{$key} = $color
+				}
+			}
+		}
+		close OFILE
+	} else {
+		warn "cannot open Gtk colors.css" if  $verbose;
+		$no_gtk = 1;
+	}
+	my $sf = $gtkpath . "settings.ini";
+	if (open(OFILE, "<", $sf)) {
+		while (<OFILE>) {
+			my $line = $_;
+			if ($line =~ /([^=]+)=([^\n]+)/) {
+				$gtksettings{$1} = $2
+			}
+		}
+		close OFILE;
+		if (exists $gtksettings{'gtk-font-name'}) {
+			my $rawfont = $gtksettings{'gtk-font-name'};
+			if ($rawfont =~ /(\D+)(\d+)/) {
+				my $name = $1;
+				my $size = $2;
+				$name =~ s/\s!//;
+				$name =~ s/,//;
+				$name =~ s/\s/-/;
+				$gtksettings{'gtk-font-name'} = "$name $size";
+			}
+		}
+	} else {
+		warn "cannot open Gtk settings.ini" if $verbose;
+		$no_gtk = 1;
+	}
+}
+
+sub merge2Xdefaults {
+}
+
 sub rgb2hex {
 	my ($red, $green, $blue) = @_;
 	my $r = hexstring($red);
@@ -167,42 +372,6 @@ sub rgb2hex {
 	return "#$r$g$b"
 
 }
-
-sub alterColor {
-	my ($hex, $offset) = @_;
-	my @rgb = hex2rgb($hex);
-	my @rgba = ();
-	for (@rgb) {
-		if ($_ < 128) {
-			my $c = $_ + $offset;
-			$c = 0 if $c < 0;
-			push @rgba, $c
-		} else {
-			my $c = $_ - $offset;
-			$c = 255 if $c > 255;
-			push @rgba, $c
-		}
-	}
-	return rgb2hex(@rgba)
-}
-
-LoadGtkInfo;
-
-if (exists $gtksettings{'gtk-font-name'}) {
-	my $rawfont = $gtksettings{'gtk-font-name'};
-	if ($rawfont =~ /(\D+)(\d+)/) {
-		my $name = $1;
-		my $size = $2;
-		$name =~ s/\s!//;
-		$name =~ s/,//;
-		$name =~ s/\s/-/;
-		$gtksettings{'gtk-font-name'} = "$name $size";
-	}
-}
-$gtksettings{'tk-active-background'} = alterColor($gtksettings{'theme_bg_color'}, -20);
-$gtksettings{'tk-through-color'} = alterColor($gtksettings{'theme_bg_color'}, 20);
-
-CollectGtkSettings;
 
 1;
 __END__
