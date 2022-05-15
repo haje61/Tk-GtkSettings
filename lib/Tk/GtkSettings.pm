@@ -12,8 +12,13 @@ our %EXPORT_TAGS = ( 'all' => [ qw(
 	$verbose
 	$out_file
 	alterColor
+	appName
 	applyGtkSettings
 	convertColorCode
+	export2file
+	export2Xdefaults
+	export2Xresources
+	export2xrdb
 	groupAdd
 	groupAll
 	groupDelete
@@ -31,19 +36,37 @@ our %EXPORT_TAGS = ( 'all' => [ qw(
 	hexstring
 	initDefaults
 	loadGtkInfo
-	merge2Xdefaults
+	platformPermitted
+	removefromFile
+	removeFromXdefaults
+	removeFromXresources
+	removeFromxrdb
+	resetAll
 	rgb2hex
 ) ] );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} });
 
+sub appName;
+sub generateOutput;
+sub loadGtkInfo;
+sub platformPermitted;
+sub resetAll;
+
 our $delete_output = 1;
-our $gtkpath = $ENV{HOME} . "/.config/gtk-3.0/";
+our $gtkpath;
 our $verbose = 0;
-our $out_file = $ENV{HOME} . "/.tkgtk";
+our $out_file;
+
+if (platformPermitted) {
+	$gtkpath = $ENV{HOME} . "/.config/gtk-3.0/";
+	$out_file = $ENV{HOME} . "/.tkgtk";
+}
 
 my $no_gtk = 0;
 my %gtksettings = ();
 my %groups = (main => [[''], {}]);
+my $app_name = $0;
+my $marker;
 
 my @contentwidgets = qw(
 	CodeText
@@ -94,6 +117,8 @@ my %listoptions = qw(
 );
 
 
+appName($0);
+
 
 sub alterColor {
 	my ($hex, $offset) = @_;
@@ -113,28 +138,12 @@ sub alterColor {
 	return rgb2hex(@rgba)
 }
 
-sub applyGtkSettings {
-	return if $no_gtk;
-	if (open(OFILE, ">", $out_file)) {
-		for (keys %groups) {
-			my $group = $groups{$_};
-			my $options = $group->[1];
-			my $mem = $group->[0];
-			for (@$mem) {
-				my $member = $_;
-				for (keys %$options) {
-					unless ($member eq '') {
-						print OFILE "*$member." . $_ . ": ", gtkKey($options->{$_}), "\n";
-					} else {
-						print OFILE '*' . $_ . ": ", gtkKey($options->{$_}), "\n";
-					}
-				}
-			}
-		}
-		close OFILE;
-		system "xrdb $out_file";
-		unlink $out_file if $delete_output;
+sub appName {
+	if (@_ ) {
+		$app_name = shift;
+		$marker = "!$app_name Tk::GtkSettings section\n";
 	}
+	return $app_name
 }
 
 sub convertColorCode {
@@ -145,6 +154,91 @@ sub convertColorCode {
 		my $b = substr(sprintf("0x%X", $3), 2);
 		return "#$r$g$b"
 	}
+}
+
+sub export2file {
+	my ($file, $remove) = @_;
+	return if $no_gtk;
+	return unless platformPermitted;
+	$remove = 0 unless defined $remove;
+	my $out = "";
+	my $found = 0;
+	if (-e $file) {
+		unless (open(XDEF, "<$file")) { 
+			warn "cannot open $file" if $verbose;
+			return
+		}
+		my $inside = 0;
+		while (my $l = <XDEF>) {
+			if ($inside) {
+				if ($l eq $marker) {
+					$inside = 0;
+				}
+			} else {
+				if ($l eq $marker) {
+					$inside = 1;
+					$found = 1;
+					$out = "$out$l" . generateOutput . $l unless $remove;
+				} else {
+					$out = "$out$l";
+				}
+			}
+		}
+		close XDEF;
+	}
+	unless ($found) {
+		$out = "$out\n$marker" . generateOutput . "$marker\n"
+	}
+	unless (open(XDEFO, ">$file")) { 
+		warn "cannot open $file" if $verbose;
+		return
+	}
+	print XDEFO $out;
+	close XDEFO;
+}
+
+sub export2Xdefaults {
+	export2file('~/.Xdefaults');
+}
+
+sub export2Xresources {
+	export2file('~/.Xresources');
+}
+
+sub export2xrdb {
+	return unless platformPermitted;
+	return if $no_gtk;
+	if (open(OFILE, ">", $out_file)) {
+		print OFILE generateOutput;
+		close OFILE;
+		system "xrdb $out_file";
+		unlink $out_file if $delete_output;
+	}
+}
+
+sub generateOutput {
+	return if $no_gtk;
+	return unless platformPermitted;
+	my $output = '';
+	for (sort keys %groups) {
+		my $name = $_;
+		my $group = $groups{$name};
+		my $options = $group->[1];
+		my $mem = $group->[0];
+		for (@$mem) {
+			my $member = $_;
+			for (sort keys %$options) {
+				my $val = gtkKey($options->{$_});
+				$val = $_ unless defined $val;
+				unless ($name eq 'main') {
+					$output = $output . $app_name . "*$member." . $_ . ": " . $val . "\n";
+				} else {
+					$output = $output . $app_name . '*' . $_ . ": " . $val . "\n";
+				}
+			}
+		}
+	}
+	return $output
 }
 
 sub groupAdd {
@@ -291,10 +385,19 @@ sub gtkKeyDelete {
 }
 
 sub initDefaults {
+	resetAll;
+	loadGtkInfo;
 	gtkKey('tk-active-background', alterColor(gtkKey('theme_bg_color'), 20));
 	gtkKey('tk-through-color', alterColor(gtkKey('theme_bg_color'), 20));
-	groupAdd('content', \@contentwidgets, \%contentoptions);
-	groupAdd('list', \@listwidgets, \%listoptions);
+	for (keys %mainoptions) {
+		groupOption('main', $_, $mainoptions{$_})
+	}
+	my @cw = @contentwidgets;
+	my %co = %contentoptions;
+	groupAdd('content', \@cw, \%co);
+	my @lw = @listwidgets;
+	my %lo = %listoptions;
+	groupAdd('list', \@lw, \%lo);
 }
 
 sub hex2rgb {
@@ -317,6 +420,7 @@ sub hexstring {
 }
 
 sub loadGtkInfo {
+	%gtksettings = ();
 	my $cf = $gtkpath . "colors.css";
 	if (open(OFILE, "<", $cf)) {
 		while (<OFILE>) {
@@ -361,7 +465,40 @@ sub loadGtkInfo {
 	}
 }
 
-sub merge2Xdefaults {
+sub platformPermitted {
+	my $platform = $^O;
+	return 0 if (($^O eq 'MSWin32') or ($^O eq 'darwin'));
+	return 1
+}
+
+sub removeFromfile {
+	my $f = shift;
+	export2file($f, 1);
+}
+
+sub removeFromXdefaults {
+	export2file('~/.Xdefaults', 1);
+}
+
+sub removeFromXresources {
+	export2file('~/.Xresouces', 1);
+}
+
+sub removeFromxrdb {
+	return unless platformPermitted;
+	return if $no_gtk;
+	if (open(OFILE, ">", $out_file)) {
+		print OFILE generateOutput;
+		close OFILE;
+		system "xrdb -remove $out_file";
+		unlink $out_file if $delete_output;
+	}
+}
+
+sub resetAll {
+	%groups = (
+		main => [[''], {}]
+	)
 }
 
 sub rgb2hex {

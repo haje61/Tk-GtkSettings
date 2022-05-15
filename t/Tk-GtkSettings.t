@@ -1,7 +1,10 @@
 use strict;
 use warnings;
 
-use Test::More tests => 16;
+use Test::More tests => 21;
+use File::Copy;
+sub compare_files;
+
 BEGIN { use_ok('Tk::GtkSettings') };
 
 use Tk::GtkSettings qw(
@@ -10,8 +13,13 @@ use Tk::GtkSettings qw(
 	$verbose
 	$out_file
 	alterColor
+	appName
 	applyGtkSettings
 	convertColorCode
+	export2file
+	export2Xdefaults
+	export2Xresources
+	export2xrdb
 	groupAdd
 	groupAll
 	groupDelete
@@ -19,8 +27,8 @@ use Tk::GtkSettings qw(
 	groupMembers
 	groupMembersAdd
 	groupMembersReplace
-	groupOptionAll
 	groupOption
+	groupOptionAll
 	groupOptionDelete
 	gtkKey
 	gtkKeyAll
@@ -29,20 +37,26 @@ use Tk::GtkSettings qw(
 	hexstring
 	initDefaults
 	loadGtkInfo
-	merge2Xdefaults
+	platformPermitted
+	removeFromXdefaults
+	removeFromXresources
+	resetAll
 	rgb2hex
 );
 
+my $outdir = './t/output/';
+mkdir $outdir unless -e $outdir;
+
 $verbose = 0;
 $gtkpath = './t/Gtk/';
-loadGtkInfo;
-my $size = gtkKeyAll;
-ok (($size eq 88), "Gtk info loaded");
 
 initDefaults;
 my @groups = groupAll;
 @groups = sort @groups;
 ok ((($groups[0] eq 'content') and ($groups[1] eq 'list') and ($groups[2] eq 'main')), "Groups set");
+
+my $size = gtkKeyAll;
+ok (($size eq 83), "Gtk info loaded");
 
 my $color1 = alterColor('#000000', 1);
 ok (($color1 eq '#010101'), 'Alter color');
@@ -85,5 +99,50 @@ ok ((gtkKey('blobber') eq 'blubber'), 'Setting gtk key');
 gtkKeyDelete('blobber');
 ok ((not defined gtkKey('blobber')), 'Deleting gtk key');
 
+my @rgb = hex2rgb('#FF0000');
+ok ((($rgb[0] eq 255) and ($rgb[1] eq 0) and ($rgb[2] eq 0)), 'hex2rgb');
+
+my $hs = hexstring(255);
+ok (($hs eq 'FF'), 'hexstring');
+
+my $hex = rgb2hex(255, 0, 0);
+ok (($hex eq '#FF0000'), 'rgb2hex');
+
+initDefaults;
+
+	if (&platformPermitted) {
+		print "we are on a permitted platform\n";
+# 		use Test::Files 
+	}
+
+SKIP: {
+	skip 'Unsupported platform', 2 unless platformPermitted;
 
 
+	copy './t/original/export.dump', './t/output/export.dump';
+	export2file($outdir . 'export.dump');
+	ok(compare_files('./t/output/export.dump', './t/reference/export.dump'), 'Exporting to file');
+
+	copy './t/original/remove.dump', './t/output/remove.dump';
+	export2file($outdir . 'remove.dump', 1);
+	ok(compare_files('./t/output/remove.dump', './t/reference/remove.dump'), 'Removing from file');
+};
+
+sub compare_files {
+	my ($fa, $fb) = @_;
+	unless (open(FILEA, "<$fa")) {
+		warn "cannot open $fa";
+		return 0;
+	}
+	my $a = '';
+	while (my $la = <FILEA>) { $a = "$a$la" }
+	close FILEA;
+	unless (open(FILEB, "<$fb")) {
+		warn "cannot open $fb";
+		return 0;
+	}
+	my $b = '';
+	while (my $lb = <FILEB>) { $b = "$b$lb" }
+	close FILEB;
+	return $a eq $b
+}

@@ -1,0 +1,54 @@
+
+######################################################################
+Some other section
+######################################################################
+
+
+!t/Tk-GtkSettings.t Tk::GtkSettings section
+t/Tk-GtkSettings.t*CodeText.background: #fffbe2
+t/Tk-GtkSettings.t*CodeText.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*Entry.background: #fffbe2
+t/Tk-GtkSettings.t*Entry.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*FloatEntry.background: #fffbe2
+t/Tk-GtkSettings.t*FloatEntry.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*PodText.background: #fffbe2
+t/Tk-GtkSettings.t*PodText.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*Spinbox.background: #fffbe2
+t/Tk-GtkSettings.t*Spinbox.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*Text.background: #fffbe2
+t/Tk-GtkSettings.t*Text.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*TextUndo.background: #fffbe2
+t/Tk-GtkSettings.t*TextUndo.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*TextEditor.background: #fffbe2
+t/Tk-GtkSettings.t*TextEditor.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*ROText.background: #fffbe2
+t/Tk-GtkSettings.t*ROText.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*Dirlist.background: #fffbe2
+t/Tk-GtkSettings.t*Dirlist.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*DirTree.background: #fffbe2
+t/Tk-GtkSettings.t*DirTree.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*HList.background: #fffbe2
+t/Tk-GtkSettings.t*HList.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*IconList.background: #fffbe2
+t/Tk-GtkSettings.t*IconList.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*Listbox.background: #fffbe2
+t/Tk-GtkSettings.t*Listbox.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*Tlist.background: #fffbe2
+t/Tk-GtkSettings.t*Tlist.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*Tree.background: #fffbe2
+t/Tk-GtkSettings.t*Tree.highlightColor: #dec9a9
+t/Tk-GtkSettings.t*activeBackground: #CAB595
+t/Tk-GtkSettings.t*activeForeground: #000000
+t/Tk-GtkSettings.t*backPageColor: #CAB595
+t/Tk-GtkSettings.t*background: #dec9a9
+t/Tk-GtkSettings.t*font: Noto-Sans   10
+t/Tk-GtkSettings.t*foreground: #000000
+t/Tk-GtkSettings.t*highlightBackground: #dec9a9
+t/Tk-GtkSettings.t*highlightColor: #75511a
+t/Tk-GtkSettings.t*inactiveBackground: #CAB595
+t/Tk-GtkSettings.t*insertBackground: #000000
+t/Tk-GtkSettings.t*selectBackground: #8f6b32
+t/Tk-GtkSettings.t*selectForeground: #ffffff
+t/Tk-GtkSettings.t*troughColor: #CAB595
+!t/Tk-GtkSettings.t Tk::GtkSettings section
+

@@ -68,10 +68,3 @@
 @define-color tooltip_background #debc85;
 @define-color tooltip_border #b0966b;
 @define-color content_view_bg #fffbe2;
-@define-color theme_titlebar_background rgb(179,146,93);
-@define-color theme_titlebar_foreground rgb(255,255,255);
-@define-color theme_titlebar_background_light #dec9a9;
-@define-color theme_titlebar_foreground_backdrop rgb(100,92,72);
-@define-color theme_titlebar_background_backdrop rgb(208,206,192);
-@define-color theme_titlebar_foreground_insensitive rgb(100,92,72);
-@define-color theme_titlebar_foreground_insensitive_backdrop rgb(100,92,72);
