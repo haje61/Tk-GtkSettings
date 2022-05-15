@@ -1,7 +1,14 @@
 Changes
+lib/Tk/GtkSettings.pm
+LICENSE
 Makefile.PL
 MANIFEST
 README
+README.md
+t/Gtk/colors.css
+t/Gtk/settings.ini
+t/original/export.dump
+t/original/remove.dump
+t/reference/export.dump
+t/reference/remove.dump
 t/Tk-GtkSettings.t
-lib/Tk/GtkSettings.pm
-
