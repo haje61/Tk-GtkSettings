@@ -1,5 +1,11 @@
 package Tk::GtkSettings;
 
+=head1 NAME
+
+Tk::GtkSettings - Give Tk applications the looks of Gtk applications
+
+=cut
+
 use strict;
 use warnings;
 our $VERSION = '0.01';
@@ -13,12 +19,11 @@ our %EXPORT_TAGS = ( 'all' => [ qw(
 	$out_file
 	alterColor
 	appName
-	applyGtkSettings
 	convertColorCode
 	export2file
 	export2Xdefaults
-	export2Xresources
 	export2xrdb
+	export2Xresources
 	groupAdd
 	groupAll
 	groupDelete
@@ -59,7 +64,7 @@ our $out_file;
 
 if (platformPermitted) {
 	$gtkpath = $ENV{HOME} . "/.config/gtk-3.0/";
-	$out_file = $ENV{HOME} . "/.tkgtk";
+	$out_file = $ENV{HOME} . "/.tkgtksettings";
 }
 
 my $no_gtk = 0;
@@ -119,6 +124,102 @@ my %listoptions = qw(
 
 appName($0);
 
+=head1 SYNOPSIS
+
+=over 4
+
+ use Tk::GtkSettings qw(initDefaults export2xrdb);
+ initDefaults;
+ export2xrdb;
+ 
+ use Tk;
+ my $w = new MainWindow;
+ 
+ #Do your stuff here
+ 
+ $w->MainLoop;
+
+=back
+
+=head1 ABSTRACT
+
+=over 4
+
+Apply Gtk colors and fonts to your perl/Tk application
+
+=back
+
+=head1 DESCRIPTION
+
+Tk::GtkSettings attempts to overcome some very old complaints about Tk: 
+
+ - It's ugly!
+ - It's complicated to adjust colors and fonts to your desktop style
+
+Tk::GtkSettings loads your Gtk configuration files and applies it's font and color settings to your perl/Tk application.
+
+b<initDefaults> loads some nice (at least we think so) default settings that copies your Gtk theme pretty well.
+
+However, it gives plenty of tools for you to adjust it and mess it up any way you like.
+
+It is harmless to install on Windows or Mac. It just will not do anything on these systems. That makes it
+smooth to add as a dependency to your own package if you want it to be able to run on Windows and Mac as well.
+
+In working with colors it assumes 8-bit color depth.
+
+=head1 EXPORTS
+
+=over 4
+
+=item B<$delete_output>
+
+=over 4
+
+Usefull for testing and debugging. B<export2xrdb> exports to a file which then is sent to xrdb. 
+It checks if this file should be deleted when done. Default value is 1.
+
+=back
+
+=item B<$gtkpath>
+
+=over 4
+
+Usefull for testing. Default value is ~/.config/gtk-3.0/. That is the location where the
+Gtk configuration files reside. This variable is not defined when on Windows or Mac.
+
+=back
+
+=item B<$out_file>
+
+=over 4
+
+Default value ~/.tkgtksettings. Used by B<export2xrdb>. This variable is not defined
+on Windows or Mac.
+
+=back
+
+=item B<$verbose>
+
+=over 4
+
+Usefull for testing and debugging. Default value is 0. If set B<Tk::GtkSettings> will 
+complain about everything not in order. Otherwise it will quietly fail.
+
+=back
+
+=item B<alterColor>(I<$hexcolor>, I<$offset>)
+
+=over 4
+
+Adjusts $hexcolor by $offset. It takes every color chanel and adds or substracts $offset.
+If the channel value is greater than 127 it will substract, otherwise it will add.
+
+ alterColor('#000000', 1) returns #010101
+ alterColor('#FFFFFF', 1) returns #FEFEFE
+
+=back
+
+=cut
 
 sub alterColor {
 	my ($hex, $offset) = @_;
@@ -138,6 +239,18 @@ sub alterColor {
 	return rgb2hex(@rgba)
 }
 
+=item B<appName>(I<$name>)
+
+Sets and returns your application name. By default it is set to what is in B<$0>. Your Gtk settings
+will only be applied to your application in xrdb. You can set it to an empty string. Then it will 
+apply your Gtk settings to all your applications.
+
+=over 4
+
+=back
+
+=cut
+
 sub appName {
 	if (@_ ) {
 		$app_name = shift;
@@ -145,6 +258,17 @@ sub appName {
 	}
 	return $app_name
 }
+
+=item B<convertColorCode>(I<'rgb(255, 0, 0)'>)
+
+=over 4
+
+Some color settings in the Gtk configuration files are in the format 'rgb(255, 255, 255)'.
+B<convertColorCode> converts these to a hex color string.
+
+=back
+
+=cut
 
 sub convertColorCode {
 	my $input = shift;
@@ -155,6 +279,19 @@ sub convertColorCode {
 		return "#$r$g$b"
 	}
 }
+
+=item B<export2file>(I<$file>, I<$removeflag>)
+
+=over 4
+
+Exports your Gtk settings to $file in a format recognized by xrdb. It looks for a section
+in the file marked by appName . "Tk::GtkSettings section\n". If it finds it it will replace this section.
+Otherwise it will append your Gtk settings to the end of the file. If $file does not yet exist it
+will create it. if $removeflag is true it will not export but remove the section from $file.
+
+=back
+
+=cut
 
 sub export2file {
 	my ($file, $remove) = @_;
@@ -197,13 +334,44 @@ sub export2file {
 	close XDEFO;
 }
 
+=item B<export2Xdefaults>(I<$removeflag>)
+
+=over 4
+
+Same as B<export2file>, however the file is always '~/.Xdefaults'.
+
+=back
+
+=cut
+
 sub export2Xdefaults {
 	export2file('~/.Xdefaults');
 }
 
+=item B<export2Xresources>(I<$removeflag>)
+
+=over 4
+
+Same as B<export2file>, however the file is always '~/.Xresources'.
+
+=back
+
+=cut
+
 sub export2Xresources {
 	export2file('~/.Xresources');
 }
+
+=item B<export2xrdb>(I<$removeflag>)
+
+=over 4
+
+exports your Gtk settings directly to the xrdb database.
+If $removeflag is set it will remove your settings from the xrdb database.
+
+=back
+
+=cut
 
 sub export2xrdb {
 	return unless platformPermitted;
@@ -215,6 +383,16 @@ sub export2xrdb {
 		unlink $out_file if $delete_output;
 	}
 }
+
+=item B<generateOutput>
+
+=over 4
+
+Generates the output used by the export functions. Returns a string.
+
+=back
+
+=cut
 
 sub generateOutput {
 	return if $no_gtk;
@@ -241,6 +419,17 @@ sub generateOutput {
 	return $output
 }
 
+=item B<groupAdd>(I<$groupname>, I<\@members>, I<\%options>)
+
+=over 4
+
+Adds $groupname to the groups hash. If @members or %options are not specified, 
+it will leave them empty.
+
+=back
+
+=cut
+
 sub groupAdd {
 	my ($group, $members, $options) = @_;
 	unless (defined $group) {
@@ -256,9 +445,29 @@ sub groupAdd {
 	}
 }
 
+=item B<groupAll>
+
+=over 4
+
+Returns a list of all available groups.
+
+=back
+
+=cut
+
 sub groupAll {
 	return keys %groups
 }
+
+=item B<groupDelete>(I<$groupname>)
+
+=over 4
+
+Removes $groupsname from the groups hash. You cannot delete the 'main' group.
+
+=back
+
+=cut
 
 sub groupDelete {
 	my $group = shift;
@@ -271,6 +480,16 @@ sub groupDelete {
 	}
 	return 1
 }
+
+=item B<groupExists>(I<$groupname>)
+
+=over 4
+
+Returns true if $groupname is available.
+
+=back
+
+=cut
 
 sub groupExists {
 	my $group = shift;
@@ -285,17 +504,38 @@ sub groupExists {
 	return 1
 }
 
+=item B<groupMembers>(I<$groupname>)
+
+=over 4
+
+Returns the list of existing members of $groupname. It will return an empty list
+if $groupname equals 'main'.
+
+=back
+
+=cut
+
 sub groupMembers {
 	my $group = shift;
 	if (groupExists($group)) {
 		if ($group eq 'main') {
 			warn "no access to main group members";
-			return
+			return ()
 		}
 		my $l = $groups{$group}->[0];
 		return @$l;
 	}
 }
+
+=item B<groupMembersAdd>(I<$groupname>, I<@newmembers>)
+
+=over 4
+
+Adds new members to $groupname. You cannot add members to the 'main' group.
+
+=back
+
+=cut
 
 sub groupMembersAdd {
 	my $group = shift;
@@ -309,6 +549,16 @@ sub groupMembersAdd {
 	}
 }
 
+=item B<groupMembersReplace>(I<$groupname>, I<@members>)
+
+=over 4
+
+Replaces the list of members in $groupsname by @members. You cannot modify the members list of the 'main' group.
+
+=back
+
+=cut
+
 sub groupMembersReplace {
 	my $group = shift;
 	if (groupExists($group)) {
@@ -321,15 +571,17 @@ sub groupMembersReplace {
 	}
 }
 
-sub groupOptionAll {
-	my $group = shift;
-	if (groupExists($group)) {
-		my $opt = $groups{$group}->[1];
-		return keys %$opt
-	}
-}
+=item B<groupOption>(I<$groupname>, I<$option>, ?I<$value>?)
 
-sub groupOption{
+=over 4
+
+Sets and returns the value of $option in $groupname.
+
+=back
+
+=cut
+
+sub groupOption {
 	my $group = shift;
 	if (groupExists($group)) {
 		my $option = shift;
@@ -345,6 +597,34 @@ sub groupOption{
 	}
 }
 
+=item B<groupOptionAll>(I<$groupname>)
+
+=over 4
+
+Returns a list of all available options in $groupname.
+
+=back
+
+=cut
+
+sub groupOptionAll {
+	my $group = shift;
+	if (groupExists($group)) {
+		my $opt = $groups{$group}->[1];
+		return keys %$opt
+	}
+}
+
+=item B<groupOptionDelete>(I<$groupname>, I<$option>)
+
+=over 4
+
+Removes $option from $groupname
+
+=back
+
+=cut
+
 sub groupOptionDelete {
 	my $group = shift;
 	if (groupExists($group)) {
@@ -356,6 +636,16 @@ sub groupOptionDelete {
 		delete $groups{$group}->[1]->{$option};
 	}
 }
+
+=item B<gtkKey>(I<$key>, ?I<$value>?)
+
+=over 4
+
+Sets and returns the value of $key in the Gtk hash
+
+=back
+
+=cut
 
 sub gtkKey {
 	my ($key, $val) = @_;
@@ -369,10 +659,30 @@ sub gtkKey {
 	return undef
 }
 
+=item B<gtkKeyAll>
+
+=over 4
+
+Returns a list of all available keys in the Gtk hash.
+
+=back
+
+=cut
+
 sub gtkKeyAll {
 	return 0 if $no_gtk;
 	return keys %gtksettings
 }
+
+=item B<gtkKeyDelete>(I<$key>)
+
+=over 4
+
+Delets $key from the Gtk hash.
+
+=back
+
+=cut
 
 sub gtkKeyDelete {
 	my $key = shift;
@@ -383,6 +693,16 @@ sub gtkKeyDelete {
 		warn "item $key not present in gtk settings" if $verbose;
 	} 
 }
+
+=item B<initDefaults>
+
+=over 4
+
+Initializes some sensible defaults. Also does a full reset and loads Gtk configuration files.
+
+=back
+
+=cut
 
 sub initDefaults {
 	resetAll;
@@ -400,6 +720,16 @@ sub initDefaults {
 	groupAdd('list', \@lw, \%lo);
 }
 
+=item B<hex2rgb>(I<$hex_color>)
+
+=over 4
+
+Returns and array with the decimal values of red, green and blue.
+
+=back
+
+=cut
+
 sub hex2rgb {
 	my $hex = shift;
 	$hex =~ s/^(\#|Ox)//;
@@ -412,12 +742,32 @@ sub hex2rgb {
 	return @rgb
 }
 
+=item B<hexstring>(I<$num>)
+
+=over 4
+
+Return the hexadecimal representation of $num in a two character string.
+
+=back
+
+=cut
+
 sub hexstring {
 	my $num = shift;
 	my $hex = substr(sprintf("0x%X", $num), 2);
 	if (length($hex) < 2) { $hex = "0$hex" }
 	return $hex
 }
+
+=item B<loadGtkInfo>
+
+=over 4
+
+Empties the Gtk hash and (re)loads the Gtk configuration files.
+
+=back
+
+=cut
 
 sub loadGtkInfo {
 	%gtksettings = ();
@@ -453,7 +803,7 @@ sub loadGtkInfo {
 			if ($rawfont =~ /(\D+)(\d+)/) {
 				my $name = $1;
 				my $size = $2;
-				$name =~ s/\s!//;
+				$name =~ s/\s*!//;
 				$name =~ s/,//;
 				$name =~ s/\s/-/;
 				$gtksettings{'gtk-font-name'} = "$name $size";
@@ -465,24 +815,74 @@ sub loadGtkInfo {
 	}
 }
 
+=item B<platformPermitted>
+
+=over 4
+
+Returns true if you are not on Windows or Mac.
+
+=back
+
+=cut
+
 sub platformPermitted {
 	my $platform = $^O;
 	return 0 if (($^O eq 'MSWin32') or ($^O eq 'darwin'));
 	return 1
 }
 
+=item B<removeFromfile>(I<$file>)
+
+=over 4
+
+Same as export2file($file, 1)
+
+=back
+
+=cut
+
 sub removeFromfile {
 	my $f = shift;
 	export2file($f, 1);
 }
 
+=item B<removeFromXdefaults>
+
+=over 4
+
+Same as export2Xdefaults(1)
+
+=back
+
+=cut
+
 sub removeFromXdefaults {
 	export2file('~/.Xdefaults', 1);
 }
 
+=item B<removeFromXresources>
+
+=over 4
+
+Same as export2Xresources(1)
+
+=back
+
+=cut
+
 sub removeFromXresources {
 	export2file('~/.Xresouces', 1);
 }
+
+=item B<removeFromxrdb>
+
+=over 4
+
+Removes all the settings previously defined from the xrdb database
+
+=back
+
+=cut
 
 sub removeFromxrdb {
 	return unless platformPermitted;
@@ -495,11 +895,32 @@ sub removeFromxrdb {
 	}
 }
 
+=item B<resetAll>
+
+=over 4
+
+Removes all groups and options. The group 'main' will remain, but all its options are also deleted.
+This does not affect the Gtk hash.
+
+=back
+
+=cut
+
 sub resetAll {
 	%groups = (
 		main => [[''], {}]
 	)
 }
+
+=item B<rgb2hex>(I<$red>, I<$green>, I<$blue>)
+
+=over 4
+
+Converts the decimval values $red, $green and $blue into a hex color string.
+
+=back
+
+=cut
 
 sub rgb2hex {
 	my ($red, $green, $blue) = @_;
@@ -509,6 +930,27 @@ sub rgb2hex {
 	return "#$r$g$b"
 
 }
+
+=back
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2022 by Hans Jeuken
+
+GPL v3.0 or same as Perl, in your option.
+
+=head1 AUTHOR
+
+Hans Jeuken (jeuken dot hans at gmail dot com)
+
+=head1 BUGS
+
+If you find any, please contact the author.
+
+=head1 TODO
+
+=cut
+
 
 1;
 __END__

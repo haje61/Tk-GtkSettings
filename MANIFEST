@@ -3,7 +3,6 @@ lib/Tk/GtkSettings.pm
 LICENSE
 Makefile.PL
 MANIFEST
-README
 README.md
 t/Gtk/colors.css
 t/Gtk/settings.ini

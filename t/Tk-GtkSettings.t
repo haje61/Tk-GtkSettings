@@ -14,7 +14,6 @@ use Tk::GtkSettings qw(
 	$out_file
 	alterColor
 	appName
-	applyGtkSettings
 	convertColorCode
 	export2file
 	export2Xdefaults
@@ -109,11 +108,6 @@ my $hex = rgb2hex(255, 0, 0);
 ok (($hex eq '#FF0000'), 'rgb2hex');
 
 initDefaults;
-
-	if (&platformPermitted) {
-		print "we are on a permitted platform\n";
-# 		use Test::Files 
-	}
 
 SKIP: {
 	skip 'Unsupported platform', 2 unless platformPermitted;
