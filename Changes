@@ -10,3 +10,6 @@ Revision history for Perl extension Tk::GtkSettings.
 	- Added applyGtkSettings 
 	- Updated dependencies in Makefile.pl
 	- Added repository to Makefile.pl
+
+0.03
+	- Corrected a typo in documentation

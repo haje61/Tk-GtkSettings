@@ -177,7 +177,7 @@ Tk::GtkSettings attempts to overcome some very old complaints about Tk:
 
 Tk::GtkSettings loads your Gtk configuration files and applies it's font and color settings to your perl/Tk application.
 
-b<initDefaults> loads some nice (at least we think so) default settings that copies your Gtk theme pretty well.
+B<initDefaults> loads some nice (at least we think so) default settings that copies your Gtk theme pretty well.
 
 However, it gives plenty of tools for you to adjust it and mess it up any way you like.
 
