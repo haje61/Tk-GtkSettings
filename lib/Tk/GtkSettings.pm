@@ -8,7 +8,8 @@ Tk::GtkSettings - Give Tk applications the looks of Gtk applications
 
 use strict;
 use warnings;
-our $VERSION = '0.01';
+use File::Basename;
+our $VERSION = '0.02';
 
 use Exporter;
 our @ISA = qw(Exporter);
@@ -51,8 +52,14 @@ our %EXPORT_TAGS = ( 'all' => [ qw(
 ) ] );
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} });
 
+our @EXPORT = qw(
+	applyGtkSettings
+);
+
 sub appName;
+sub export2xrdb;
 sub generateOutput;
+sub initDefaults;
 sub loadGtkInfo;
 sub platformPermitted;
 sub resetAll;
@@ -67,10 +74,14 @@ if (platformPermitted) {
 	$out_file = $ENV{HOME} . "/.tkgtksettings";
 }
 
+my $dir = dirname($0);
+print "$dir\n";
+my $file = basename($0);
+print "$file\n";
 my $no_gtk = 0;
 my %gtksettings = ();
 my %groups = (main => [[''], {}]);
-my $app_name = $0;
+my $app_name = basename($0);
 my $marker;
 
 my @contentwidgets = qw(
@@ -122,15 +133,23 @@ my %listoptions = qw(
 );
 
 
-appName($0);
+appName(basename($0));
 
 =head1 SYNOPSIS
 
 =over 4
 
+ use Tk::GtkSettings;
+ applyGtkSettings;
+ 
+ #or
+ 
  use Tk::GtkSettings qw(initDefaults export2xrdb);
  initDefaults;
+ #do your adjustments here
  export2xrdb;
+ 
+ #then initialize your perl/Tk app.
  
  use Tk;
  my $w = new MainWindow;
@@ -237,6 +256,23 @@ sub alterColor {
 		}
 	}
 	return rgb2hex(@rgba)
+}
+
+=item B<applyGtkSettings>
+
+=over 4
+
+Just making life easy. Call this one and your done, unless you require adjustments.
+It calls B<initDefaults> and exports the whole bunch to xrdb.
+Exported by default.
+
+=back
+
+=cut
+
+sub applyGtkSettings {
+	initDefaults;
+	export2xrdb;
 }
 
 =item B<appName>(I<$name>)
@@ -943,9 +979,12 @@ GPL v3.0 or same as Perl, in your option.
 
 Hans Jeuken (jeuken dot hans at gmail dot com)
 
-=head1 BUGS
+=head1 BUGS AND CAVEATS
 
-If you find any, please contact the author.
+Exporting to xrdb will not work if the name of your executable/script contains
+an extension (.pl). This is a limitation of xrdb.
+
+If you find any bugs, please contact the author.
 
 =head1 TODO
 
