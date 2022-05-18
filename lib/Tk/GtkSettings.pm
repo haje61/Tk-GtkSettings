@@ -9,7 +9,7 @@ Tk::GtkSettings - Give Tk applications the looks of Gtk applications
 use strict;
 use warnings;
 use File::Basename;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use Exporter;
 our @ISA = qw(Exporter);
@@ -74,10 +74,6 @@ if (platformPermitted) {
 	$out_file = $ENV{HOME} . "/.tkgtksettings";
 }
 
-my $dir = dirname($0);
-print "$dir\n";
-my $file = basename($0);
-print "$file\n";
 my $no_gtk = 0;
 my %gtksettings = ();
 my %groups = (main => [[''], {}]);
@@ -277,11 +273,11 @@ sub applyGtkSettings {
 
 =item B<appName>(I<$name>)
 
-Sets and returns your application name. By default it is set to what is in B<$0>. Your Gtk settings
-will only be applied to your application in xrdb. You can set it to an empty string. Then it will 
-apply your Gtk settings to all your applications.
-
 =over 4
+
+Sets and returns your application name. By default it is set to the basename of what is in B<$0>. Your Gtk settings
+will only be applied to your application in xrdb. You can set it to an empty string. Then it will 
+apply your Gtk settings to all your perl/Tk applications.
 
 =back
 
@@ -316,7 +312,7 @@ sub convertColorCode {
 	}
 }
 
-=item B<export2file>(I<$file>, I<$removeflag>)
+=item B<export2file>(I<$file>, ?I<$removeflag>?)
 
 =over 4
 
@@ -370,7 +366,7 @@ sub export2file {
 	close XDEFO;
 }
 
-=item B<export2Xdefaults>(I<$removeflag>)
+=item B<export2Xdefaults>(?I<$removeflag>?)
 
 =over 4
 
@@ -384,7 +380,7 @@ sub export2Xdefaults {
 	export2file('~/.Xdefaults');
 }
 
-=item B<export2Xresources>(I<$removeflag>)
+=item B<export2Xresources>(?I<$removeflag>?)
 
 =over 4
 
@@ -398,12 +394,11 @@ sub export2Xresources {
 	export2file('~/.Xresources');
 }
 
-=item B<export2xrdb>(I<$removeflag>)
+=item B<export2xrdb>
 
 =over 4
 
 exports your Gtk settings directly to the xrdb database.
-If $removeflag is set it will remove your settings from the xrdb database.
 
 =back
 
@@ -434,7 +429,12 @@ sub generateOutput {
 	return if $no_gtk;
 	return unless platformPermitted;
 	my $output = '';
+	#group main has to be done first.
+	my (@g) = ('main');
 	for (sort keys %groups) {
+		push @g, $_ unless $_ eq 'main';
+	}
+	for (@g) {
 		my $name = $_;
 		my $group = $groups{$name};
 		my $options = $group->[1];

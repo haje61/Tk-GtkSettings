@@ -11,5 +11,9 @@ Revision history for Perl extension Tk::GtkSettings.
 	- Updated dependencies in Makefile.pl
 	- Added repository to Makefile.pl
 
-0.03
-	- Corrected a typo in documentation
+0.03  May 18 2022
+	- Fixed generateOUtput, now 'main' group is handled first
+	- Corrected a typo and some errors in documentation
+
+0.04
+	- Corrected errors in documentation
