@@ -17,3 +17,6 @@ Revision history for Perl extension Tk::GtkSettings.
 
 0.04
 	- Corrected errors in documentation
+	- Fixed generateOutput now handles correct value if gtk key not exists
+	- Attempted to deal with multiple formats of the keys in gtk colors.css
+	- Fixed decoding gtk font names
