@@ -381,7 +381,7 @@ sub convertColorCode {
 	}
 }
 
-=item B<decodeFont(I<$gtkfontstring>)
+=item B<decodeFont>(I<$gtkfontstring>)
 
 =over 4
 
