@@ -9,7 +9,8 @@ Tk::GtkSettings - Give Tk applications the looks of Gtk applications
 use strict;
 use warnings;
 use File::Basename;
-our $VERSION = '0.04';
+use Config;
+our $VERSION = '0.05';
 
 use Exporter;
 our @ISA = qw(Exporter);
@@ -154,7 +155,6 @@ my @basegtkeys = qw(
 );
 
 my @contentwidgets = qw(
-	CodeText
 	Entry
 	FloatEntry
 	PodText
@@ -163,12 +163,14 @@ my @contentwidgets = qw(
 	TextUndo
 	TextEditor
 	ROText
+	XText
 );
 
 my @listwidgets = qw(
 	Dirlist
 	DirTree
 	HList
+	ITree
 	IconList
 	Listbox
 	Tlist
@@ -200,7 +202,6 @@ my %listoptions = qw(
 	background           content_view_bg
 	highlightColor			theme_bg_color
 );
-
 
 appName(basename($0));
 
@@ -336,6 +337,7 @@ Exported by default.
 =cut
 
 sub applyGtkSettings {
+	return unless platformPermitted;
 	initDefaults;
 	export2xrdb;
 }
@@ -381,7 +383,7 @@ sub convertColorCode {
 	}
 }
 
-=item B<decodeFont>(I<$gtkfontstring>)
+=item B<decodeFont(I<$gtkfontstring>)
 
 =over 4
 
@@ -429,8 +431,6 @@ will create it. if $removeflag is true it will not export but remove the section
 
 sub export2file {
 	my ($file, $remove) = @_;
-	return if $no_gtk;
-	return unless platformPermitted;
 	$remove = 0 unless defined $remove;
 	my $out = "";
 	my $found = 0;
@@ -844,10 +844,11 @@ Initializes some sensible defaults. Also does a full reset and loads Gtk configu
 =cut
 
 sub initDefaults {
+	return unless platformPermitted;
 	resetAll;
 	loadGtkInfo;
-	gtkKey('tk-active-background', alterColor(gtkKey('theme_bg_color'), 20));
-	gtkKey('tk-through-color', alterColor(gtkKey('theme_bg_color'), 20));
+	gtkKey('tk-active-background', alterColor(gtkKey('theme_bg_color'), 30));
+	gtkKey('tk-through-color', alterColor(gtkKey('theme_bg_color'), 30));
 	for (keys %mainoptions) {
 		groupOption('main', $_, $mainoptions{$_})
 	}
@@ -857,6 +858,7 @@ sub initDefaults {
 	my @lw = @listwidgets;
 	my %lo = %listoptions;
 	groupAdd('list', \@lw, \%lo);
+	groupAdd('menu', ['Menu'], {borderWidth => 1});
 }
 
 =item B<hex2rgb>(I<$hex_color>)
@@ -909,6 +911,7 @@ Empties the Gtk hash and (re)loads the Gtk configuration files.
 =cut
 
 sub loadGtkInfo {
+	return unless platformPermitted;
 	%gtksettings = ();
 	my $cf = $gtkpath . "colors.css";
 	if (open(OFILE, "<", $cf)) {
@@ -960,7 +963,7 @@ Returns true if you are not on Windows or Mac.
 
 sub platformPermitted {
 	my $platform = $^O;
-	return 0 if (($^O eq 'MSWin32') or ($^O eq 'darwin'));
+	return 0 if (($Config{osname} eq 'MSWin32') or ($Config{osname} eq 'darwin'));
 	return 1
 }
 
