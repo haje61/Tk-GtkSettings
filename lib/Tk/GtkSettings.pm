@@ -10,7 +10,7 @@ use strict;
 use warnings;
 use File::Basename;
 use Config;
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use Exporter;
 our @ISA = qw(Exporter);
@@ -203,7 +203,7 @@ my %listoptions = qw(
 	highlightColor			theme_bg_color
 );
 
-appName(basename($0));
+appName($0);
 
 =head1 SYNOPSIS
 
@@ -357,6 +357,8 @@ apply your Gtk settings to all your perl/Tk applications.
 sub appName {
 	if (@_ ) {
 		$app_name = shift;
+		$app_name = basename($app_name); #remove leading folders
+		$app_name =~ s/\.[^.]+$//; #remove extension
 		$marker = "!$app_name Tk::GtkSettings section\n";
 	}
 	return $app_name
@@ -393,7 +395,6 @@ Converts the font string in gtk to something Tk can handle
 
 =cut
 
-# {Khmer OS Battambang} -12 bold italic
 sub decodeFont {
 	my $rawfont = shift;
 	my $family = '';
@@ -858,7 +859,7 @@ sub initDefaults {
 	my @lw = @listwidgets;
 	my %lo = %listoptions;
 	groupAdd('list', \@lw, \%lo);
-	groupAdd('menu', ['Menu'], {borderWidth => 1});
+	groupAdd('menu', ['Menu', 'NoteBook'], {borderWidth => 1});
 }
 
 =item B<hex2rgb>(I<$hex_color>)
@@ -1082,18 +1083,15 @@ sub _truncate {
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2022 by Hans Jeuken
+Copyright 2022 - 2023 by Hans Jeuken
 
-GPL v3.0 or same as Perl, in your option.
+Same as Perl, in your option.
 
 =head1 AUTHOR
 
 Hans Jeuken (jeuken dot hans at gmail dot com)
 
 =head1 BUGS AND CAVEATS
-
-Exporting to xrdb will not work if the name of your executable/script contains
-an extension (.pl). This is a limitation of xrdb.
 
 If you find any bugs, please contact the author.
 

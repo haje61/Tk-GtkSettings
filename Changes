@@ -24,3 +24,8 @@ Revision history for Perl extension Tk::GtkSettings.
 0.05 June 1 2023
 	- Modified some default settings
 	- Restricted functionality on unpermitted systems, no more errors.
+
+0.06  Jun 29 2023
+	- Repaired failure when executable has extension
+	- Updated documentation
+	- Added NoteBook to the menu group
