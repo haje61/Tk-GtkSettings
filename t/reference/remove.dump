@@ -6,4 +6,81 @@ Some other section
 
 
 
+!Tk-GtkSettings Tk::GtkSettings section
+Tk-GtkSettings*activeBackground: #C0AB8B
+Tk-GtkSettings*activeForeground: #000000
+Tk-GtkSettings*backPageColor: #C0AB8B
+Tk-GtkSettings*background: #dec9a9
+Tk-GtkSettings*font: {Noto Sans} 10 
+Tk-GtkSettings*foreground: #000000
+Tk-GtkSettings*highlightBackground: #dec9a9
+Tk-GtkSettings*highlightColor: #75511a
+Tk-GtkSettings*inactiveBackground: #C0AB8B
+Tk-GtkSettings*insertBackground: #000000
+Tk-GtkSettings*selectBackground: #8f6b32
+Tk-GtkSettings*selectForeground: #ffffff
+Tk-GtkSettings*troughColor: #C0AB8B
+Tk-GtkSettings*Member1.background: #fffbe2
+Tk-GtkSettings*Member1.highlightColor: #dec9a9
+Tk-GtkSettings*Member2.background: #fffbe2
+Tk-GtkSettings*Member2.highlightColor: #dec9a9
+Tk-GtkSettings*Dirlist.background: #fffbe2
+Tk-GtkSettings*Dirlist.highlightColor: #dec9a9
+Tk-GtkSettings*DirTree.background: #fffbe2
+Tk-GtkSettings*DirTree.highlightColor: #dec9a9
+Tk-GtkSettings*HList.background: #fffbe2
+Tk-GtkSettings*HList.highlightColor: #dec9a9
+Tk-GtkSettings*ITree.background: #fffbe2
+Tk-GtkSettings*ITree.highlightColor: #dec9a9
+Tk-GtkSettings*IconList.background: #fffbe2
+Tk-GtkSettings*IconList.highlightColor: #dec9a9
+Tk-GtkSettings*Listbox.background: #fffbe2
+Tk-GtkSettings*Listbox.highlightColor: #dec9a9
+Tk-GtkSettings*Tlist.background: #fffbe2
+Tk-GtkSettings*Tlist.highlightColor: #dec9a9
+Tk-GtkSettings*Tree.background: #fffbe2
+Tk-GtkSettings*Tree.highlightColor: #dec9a9
+Tk-GtkSettings*Menu.borderWidth: 1
+Tk-GtkSettings*NoteBook.borderWidth: 1
+!Tk-GtkSettings Tk::GtkSettings section
+
+
+! Tk::GtkSettings section
+*activeBackground: #C0AB8B
+*activeForeground: #000000
+*backPageColor: #C0AB8B
+*background: #dec9a9
+*font: {Noto Sans} 10 
+*foreground: #000000
+*highlightBackground: #dec9a9
+*highlightColor: #75511a
+*iconTheme: oxygen
+*inactiveBackground: #C0AB8B
+*insertBackground: #000000
+*selectBackground: #8f6b32
+*selectForeground: #ffffff
+*troughColor: #C0AB8B
+*Member1.background: #fffbe2
+*Member1.highlightColor: #dec9a9
+*Member2.background: #fffbe2
+*Member2.highlightColor: #dec9a9
+*Dirlist.background: #fffbe2
+*Dirlist.highlightColor: #dec9a9
+*DirTree.background: #fffbe2
+*DirTree.highlightColor: #dec9a9
+*HList.background: #fffbe2
+*HList.highlightColor: #dec9a9
+*ITree.background: #fffbe2
+*ITree.highlightColor: #dec9a9
+*IconList.background: #fffbe2
+*IconList.highlightColor: #dec9a9
+*Listbox.background: #fffbe2
+*Listbox.highlightColor: #dec9a9
+*Tlist.background: #fffbe2
+*Tlist.highlightColor: #dec9a9
+*Tree.background: #fffbe2
+*Tree.highlightColor: #dec9a9
+*Menu.borderWidth: 1
+*NoteBook.borderWidth: 1
+! Tk::GtkSettings section
 
